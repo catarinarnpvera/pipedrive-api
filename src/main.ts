@@ -5,15 +5,15 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  let document: OpenAPIObject;
-    const swaggerInfo = 'swagger';
-    const options = new DocumentBuilder()
-      .setTitle('Pipedrive Api')
-      .setDescription('Pipedrive Swagger Api')
-      .setVersion('1')
-      .build();
-    document = SwaggerModule.createDocument(app, options);
-    SwaggerModule.setup('/swagger', app, document);
+  // let document: OpenAPIObject;
+  const swaggerInfo = 'swagger';
+  const options = new DocumentBuilder()
+    .setTitle('Pipedrive Api')
+    .setDescription('Pipedrive Swagger Api')
+    .setVersion('1')
+    .build();
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('/swagger', app, document);
 
   await app.listen(3000);
 }
