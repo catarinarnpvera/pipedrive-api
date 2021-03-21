@@ -1,86 +1,95 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
-  OrganizationDataRequestDto,
-  OrganizationResponseDto,
+  postDataRequestDto,
   OrgRelationshipResponseDto,
   PageDto,
+  postResponseDto,
 } from 'dto';
 import { OrganizationEntity } from 'entities/orgarization.entity';
 import { OrganizationRepository } from 'repositories/organization.repository';
+import { RelationshipRepository } from 'repositories/relationship.repository';
 
 @Injectable()
 export class AppService {
   constructor(
     @InjectRepository(OrganizationRepository)
     private organizationRepository: OrganizationRepository,
+    @InjectRepository(RelationshipRepository)
+    private relationshipRepository: RelationshipRepository,
   ) {}
   // eslint-disable-next-line prettier/prettier
-  async getOrgRelationship(name: string, pagination: PageDto): Promise<OrgRelationshipResponseDto[]> {
+  async getOrgRelationship(name: string, page: PageDto): Promise<OrgRelationshipResponseDto[]> {
 
-    const organization = await this.checkExistingOrg(name);
-    console.log(
-      '🚀 ~ file: app.service.ts ~ line 10 ~ AppService ~ getOrgRelationship ~ organization',
-      organization,
-    );
+    await this.checkExistingOrg(name);
+    const getResponse = await this.getRelationships(name);
 
-    const res = [
-      {
-        relationship: 'parent',
-        orgName: 'Banana tree',
-      },
-      {
-        relationship: 'parent',
-        orgName: 'Big banana tree',
-      },
-    ];
-    return res;
+    return getResponse;
   }
 
   async checkExistingOrg(name: string): Promise<OrganizationEntity> {
     const existingOrg = await this.organizationRepository.findByName(name);
-    console.log(
-      '🚀 ~ file: app.service.ts ~ line 34 ~ AppService ~ checkExistingOrg ~ existingOrg',
-      existingOrg,
-    );
     if (!existingOrg) {
       throw new NotFoundException('Unkown organization name');
     }
     return existingOrg;
   }
 
+  async getRelationships(name: string): Promise<OrgRelationshipResponseDto[]> {
+    const relations = await this.relationshipRepository.findParentChildRelationship(name);
+    const allRelations = [];
+    const parents = [];
+    let sisters = [];
+    relations.forEach((rel) => {
+      if (name == rel.parentName) {
+        allRelations.push({
+          relationshipType: 'child',
+          orgName: rel.childName,
+        });
+      } else if (name == rel.childName) {
+        allRelations.push({
+          relationshipType: 'parent',
+          orgName: rel.parentName,
+        });
+        parents.push(rel.parentName);
+      }
+    });
+    if (parents.length > 0) {
+      // eslint-disable-next-line prettier/prettier
+      sisters = await this.relationshipRepository.findSisterdRelationship(name, parents);
+    }
+    const sistersList = [];
+    sisters.forEach((sis) => {
+      if (!sistersList.includes(sis.childName)) {
+        allRelations.push({
+          relationshipType: 'sister',
+          orgName: sis.childName,
+        });
+        sistersList.push(sis.childName);
+      }
+    });
+    return allRelations;
+  }
+
   // eslint-disable-next-line prettier/prettier
-  async postOrganizations(orgBody: OrganizationDataRequestDto): Promise<OrganizationResponseDto> {
-    // const Body = {
-    //   "orgName": "Paradise Island",
-    //   "children": [
-    //     {
-    //       "orgName": "Banana tree",
-    //       "children": [
-    //         {
-    //           "orgName": "Yellow Banana"
-    //         },
-    //         {
-    //           "orgName": "Brown Banana"
-    //         },
-    //         {
-    //           "orgName": "Black Banana"
-    //         }
-    //       ]
-    //     }
-    //   ]
-    // }
+  async postOrganizationsAndRelationships(orgBody: postDataRequestDto): Promise<postResponseDto> {
+    let postResponse;
 
     const relations = this.getRelations(orgBody.orgName, orgBody.children);
-    console.log("🚀 ~ file: app.service.ts ~ line 74 ~ AppService ~ postOrganizations ~ relation", relations)
     const orgNames = this.getOrgNames(relations);
-    console.log("🚀 ~ file: app.service.ts ~ line 74 ~ AppService ~ postOrganizations ~ orgNames", orgNames)
 
     // eslint-disable-next-line prettier/prettier
-    const postOrg = await this.organizationRepository.postOrgData(orgNames, relations);
-    console.log("🚀 ~ file: app.service.ts ~ line 80 ~ AppService ~ postOrganizations ~ postOrg", postOrg)
+    const postOrg = await this.organizationRepository.postOrganizations(orgNames);
+    const postRel = await this.relationshipRepository.postRelationships(relations);
 
-    return postOrg;
+    if (postOrg.success && postRel.success) {
+      postResponse = {
+        success: true,
+        recordsInsertedOnOrganization: postOrg.recordsInsertedOnOrganization,
+        recordsInsertedOnRelationship: postRel.recordsInsertedOnRelationship,
+      };
+    }
+    return postResponse;
   }
 
   getRelations(orgName, children) {
@@ -88,12 +97,12 @@ export class AppService {
 
     children.forEach((child) => { // for
       orgRelations.push({
-        childName: child.orgName,
         parentName: orgName,
+        childName: child.orgName,
       });
       if (child.children) {
-        const cenas = this.getRelations(child.orgName, child.children);
-        orgRelations = orgRelations.concat(cenas);
+        const relation = this.getRelations(child.orgName, child.children);
+        orgRelations = orgRelations.concat(relation);
       }
     });
 
@@ -105,12 +114,10 @@ export class AppService {
 
     relations.forEach((child) => { // for
       // eslint-disable-next-line prettier/prettier
-      //   orgNames.push({ orgName: child.childName });
-      //   orgNames.push({ orgName: child.parentName });
-      if (!(orgNames.filter(e => e.orgName === child.childName).length > 0)) {
+      if (!(orgNames.filter(org => org.orgName === child.childName).length > 0)) {
         orgNames.push({ orgName: child.childName });
       }
-      if(!(orgNames.filter(e => e.orgName === child.parentName).length > 0)){
+      if(!(orgNames.filter(org => org.orgName === child.parentName).length > 0)){
         orgNames.push({ orgName: child.parentName });
       }
     });
@@ -120,3 +127,45 @@ export class AppService {
     return orgNames;
   }
 }
+
+// {
+//   "orgName":"Paradise Island",
+//   "children":[
+//      {
+//         "orgName:":"Banana tree",
+//         "children":[
+//            {
+//               "orgName":"Yellow Banana"
+//            },
+//            {
+//               "orgName":"Brown Banana"
+//            },
+//            {
+//               "orgName":"Black Banana"
+//            }
+//         ]
+//      },
+//      {
+//         "orgName:":"Big banana tree",
+//         "children":[
+//            {
+//               "orgName":"Yellow Banana"
+//            },
+//            {
+//               "orgName":"Brown Banana"
+//            },
+//            {
+//               "orgName":"Green Banana"
+//            },
+//            {
+//               "orgName":"Black Banana",
+//               "children":[
+//                  {
+//                     "orgName":"Phoneutria Spider"
+//                  }
+//               ]
+//            }
+//         ]
+//      }
+//   ]
+// }

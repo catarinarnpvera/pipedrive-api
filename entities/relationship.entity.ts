@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('relationship')
-export class relationshipEntity {
+export class RelationshipEntity {
   @PrimaryColumn({ name: 'Id', type: 'int', nullable: false })
   Id: number;
 

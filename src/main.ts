@@ -6,7 +6,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // let document: OpenAPIObject;
-  const swaggerInfo = 'swagger';
   const options = new DocumentBuilder()
     .setTitle('Pipedrive Api')
     .setDescription('Pipedrive Swagger Api')

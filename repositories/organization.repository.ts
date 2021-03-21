@@ -1,10 +1,9 @@
+import { OrganizationResponseDto } from 'dto';
 import { OrganizationEntity } from 'entities/orgarization.entity';
-import { relationshipEntity } from 'entities/relationship.entity';
-import { EntityRepository, getConnection, Repository } from 'typeorm';
+import { EntityRepository, Repository } from 'typeorm';
 
 @EntityRepository(OrganizationEntity)
 export class OrganizationRepository extends Repository<OrganizationEntity> {
-
   public async findByName(name: string): Promise<OrganizationEntity> {
     try {
       return await this.findOne({ orgName: name });
@@ -14,29 +13,25 @@ export class OrganizationRepository extends Repository<OrganizationEntity> {
   }
 
   // eslint-disable-next-line prettier/prettier
-  public async postOrgData(orgNames: OrganizationEntity[], relations: relationshipEntity[]): Promise<any> {
+  public async postOrganizations(orgNames: OrganizationEntity[]): Promise<OrganizationResponseDto> {
+    let result;
     try {
+      const orgResult = await this.createQueryBuilder()
+        .insert()
+        .into(OrganizationEntity)
+        .values(orgNames)
+        .orUpdate({ conflict_target: ['orgName'], overwrite: ['orgName'] })
+        .execute();
 
-    //   await getConnection()
-    //     .createQueryBuilder()
-    //     .insert()
-    //     .into(relationshipEntity)
-    //     .values(relations)
-    //     .execute();
-
-    // const res = await getConnection()
-    // .createQueryBuilder()
-    // .insert()
-    // .into(OrganizationEntity)
-    // .values(orgNames)
-    // //.orIgnore()
-    // .execute();
-    
-    const res = this.save(orgNames);
-    console.log("🚀 ~ file: organization.repository.ts ~ line 28 ~ OrganizationRepository ~ postOrgData ~ res", res)
+      if (orgResult.raw.affectedRows) {
+        result = {
+          success: true,
+          recordsInsertedOnOrganization: orgResult.raw.affectedRows,
+        };
+      }
     } catch (error) {
       throw new Error(error);
     }
-    return { success: true };
+    return result;
   }
 }

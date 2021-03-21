@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class OrganizationResponseDto {
+export class RelationshipResponseDto {
   @ApiProperty()
   success: boolean;
 
   @ApiProperty()
-  recordsInsertedOnOrganization: number;
+  recordsInsertedOnRelationship: number;
 }

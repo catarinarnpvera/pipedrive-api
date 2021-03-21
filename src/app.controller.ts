@@ -1,8 +1,13 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { NameDto, OrgRelationshipResponseDto, PageDto } from 'dto';
+import {
+  NameDto,
+  OrgRelationshipResponseDto,
+  PageDto,
+  postResponseDto,
+} from 'dto';
 import { OrganizationResponseDto } from 'dto/organization-response.dto';
-import { OrganizationDataRequestDto } from 'dto/organization-data-request.dto';
+import { postDataRequestDto } from 'dto/post-data-request.dto';
 import { AppService } from './app.service';
 
 @ApiTags('organization')
@@ -29,7 +34,7 @@ export class AppController {
     type: OrganizationResponseDto,
   })
   // eslint-disable-next-line prettier/prettier
-  postOrganizations(@Body() body: OrganizationDataRequestDto): Promise<OrganizationResponseDto> {
-    return this.appService.postOrganizations(body);
+  postOrganizations(@Body() body: postDataRequestDto): Promise<postResponseDto> {
+    return this.appService.postOrganizationsAndRelationships(body);
   }
 }

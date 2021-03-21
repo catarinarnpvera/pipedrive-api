@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class OrgRelationshipResponseDto {
   @ApiProperty()
-  relationship: string;
+  relationshipType: string;
 
   @ApiProperty()
   orgName: string;
