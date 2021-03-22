@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
-  postDataRequestDto,
+  PostDataRequestDto,
   OrgRelationshipResponseDto,
   PageDto,
   postResponseDto,
@@ -37,16 +37,16 @@ export class AppService {
 
   async getRelationships(name: string): Promise<OrgRelationshipResponseDto[]> {
     const relations = await this.relationshipRepository.findParentChildRelationship(name);
-    const allRelations = [];
+    let allRelations = [];
     const parents = [];
-    let sisters = [];
     relations.forEach((rel) => {
       if (name == rel.parentName) {
         allRelations.push({
           relationshipType: 'child',
           orgName: rel.childName,
         });
-      } else if (name == rel.childName) {
+      }
+      if (name == rel.childName) {
         allRelations.push({
           relationshipType: 'parent',
           orgName: rel.parentName,
@@ -55,25 +55,15 @@ export class AppService {
       }
     });
     if (parents.length > 0) {
-      // eslint-disable-next-line prettier/prettier
-      sisters = await this.relationshipRepository.findSisterdRelationship(name, parents);
+      const sistersList = await this.getSisters(name, parents);
+      allRelations = allRelations.concat(sistersList);
+      return this.sortRelationNames(allRelations);
     }
-    const sistersList = [];
-    sisters.forEach((sis) => {
-      if (!sistersList.includes(sis.childName)) {
-        allRelations.push({
-          relationshipType: 'sister',
-          orgName: sis.childName,
-        });
-        sistersList.push(sis.childName);
-      }
-    });
-    return allRelations;
+    return this.sortRelationNames(allRelations);
   }
 
   // eslint-disable-next-line prettier/prettier
-  async postOrganizationsAndRelationships(orgBody: postDataRequestDto): Promise<postResponseDto> {
-    let postResponse;
+  async postOrganizationsAndRelationships(orgBody: PostDataRequestDto): Promise<postResponseDto> {
 
     const relations = this.getRelations(orgBody.orgName, orgBody.children);
     const orgNames = this.getOrgNames(relations);
@@ -83,13 +73,12 @@ export class AppService {
     const postRel = await this.relationshipRepository.postRelationships(relations);
 
     if (postOrg.success && postRel.success) {
-      postResponse = {
+      return {
         success: true,
         recordsInsertedOnOrganization: postOrg.recordsInsertedOnOrganization,
         recordsInsertedOnRelationship: postRel.recordsInsertedOnRelationship,
       };
     }
-    return postResponse;
   }
 
   getRelations(orgName, children) {
@@ -125,6 +114,21 @@ export class AppService {
     // orgNames = [...new Set(orgNames).keys()];
 
     return orgNames;
+  }
+
+  async getSisters(name, parents) {
+    const sisters = await this.relationshipRepository.findSistersRelationship(name, parents);
+
+    return sisters.map((sis) => {
+      return {
+        relationshipType: 'sister',
+        orgName: sis.childName,
+      };
+    });
+  }
+
+  sortRelationNames(allRelations) {
+    return allRelations.sort((a, b) => (a.orgName > b.orgName ? 1 : -1));
   }
 }
 

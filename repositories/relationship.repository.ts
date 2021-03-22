@@ -6,7 +6,6 @@ import { EntityRepository, Repository, In, Not, Equal } from 'typeorm';
 export class RelationshipRepository extends Repository<RelationshipEntity> {
   // eslint-disable-next-line prettier/prettier
   public async postRelationships( relations: RelationshipEntity[] ): Promise<RelationshipResponseDto> {
-    let result;
     try {
       const relationsResult = await this.createQueryBuilder()
         .insert()
@@ -19,7 +18,7 @@ export class RelationshipRepository extends Repository<RelationshipEntity> {
         .execute();
 
       if (relationsResult.raw.affectedRows) {
-        result = {
+        return {
           success: true,
           recordsInsertedOnRelationship: relationsResult.raw.affectedRows,
         };
@@ -27,33 +26,35 @@ export class RelationshipRepository extends Repository<RelationshipEntity> {
     } catch (error) {
       throw new Error(error);
     }
-    return result;
   }
 
   public async findParentChildRelationship(name: string): Promise<any> {
-    let relation;
     try {
-      relation = await this.find({
+      return await this.find({
         where: [{ parentName: name }, { childName: name }],
       });
     } catch (error) {
       throw new Error(error);
     }
-    return relation;
   }
 
   // eslint-disable-next-line prettier/prettier
-  public async findSisterdRelationship(name: string, parents: string[]): Promise<any> {
-    let relation;
+  public async findSistersRelationship(name: string, parents: string[]): Promise<any> {
     try {
-      relation = await this.find({
-        parentName: In(parents),
-        childName: Not(Equal(name)),
-      });
+      return await this.createQueryBuilder('rel')
+        .select()
+        .where('rel.parentName IN (:...parents)', { parents: parents })
+        .andWhere('rel.childName != :name', { name })
+        .groupBy('rel.childName')
+        .getMany();
+
+    //   const relation = await this.find({
+    //     parentName: In(parents),
+    //     childName: Not(Equal(name)),
+    //   });
     } catch (error) {
       throw new Error(error);
     }
-    return relation;
   }
 }
 

@@ -7,7 +7,7 @@ import {
   postResponseDto,
 } from 'dto';
 import { OrganizationResponseDto } from 'dto/organization-response.dto';
-import { postDataRequestDto } from 'dto/post-data-request.dto';
+import { PostDataRequestDto } from 'dto/post-data-request.dto';
 import { AppService } from './app.service';
 
 @ApiTags('organization')
@@ -34,7 +34,7 @@ export class AppController {
     type: OrganizationResponseDto,
   })
   // eslint-disable-next-line prettier/prettier
-  postOrganizations(@Body() body: postDataRequestDto): Promise<postResponseDto> {
+  postOrganizations(@Body() body: PostDataRequestDto): Promise<postResponseDto> {
     return this.appService.postOrganizationsAndRelationships(body);
   }
 }

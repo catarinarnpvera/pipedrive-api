@@ -14,7 +14,6 @@ export class OrganizationRepository extends Repository<OrganizationEntity> {
 
   // eslint-disable-next-line prettier/prettier
   public async postOrganizations(orgNames: OrganizationEntity[]): Promise<OrganizationResponseDto> {
-    let result;
     try {
       const orgResult = await this.createQueryBuilder()
         .insert()
@@ -24,7 +23,7 @@ export class OrganizationRepository extends Repository<OrganizationEntity> {
         .execute();
 
       if (orgResult.raw.affectedRows) {
-        result = {
+        return {
           success: true,
           recordsInsertedOnOrganization: orgResult.raw.affectedRows,
         };
@@ -32,6 +31,5 @@ export class OrganizationRepository extends Repository<OrganizationEntity> {
     } catch (error) {
       throw new Error(error);
     }
-    return result;
   }
 }

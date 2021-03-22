@@ -8,7 +8,7 @@ export class childrenList {
   children: childrenList[];
 }
 
-export class postDataRequestDto {
+export class PostDataRequestDto {
   @ApiProperty()
   orgName: string;
 
@@ -16,4 +16,4 @@ export class postDataRequestDto {
   children: childrenList[];
 }
 
-//{ type: [postDataRequestDto] }
+//{ type: [PostDataRequestDto] }
