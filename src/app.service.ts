@@ -69,7 +69,7 @@ export class AppService {
     const orgNames = this.getOrgNames(relations);
 
     // eslint-disable-next-line prettier/prettier
-    const postOrg = await this.organizationRepository.postOrganizations(orgNames);
+    const postOrg = await this.organizatpionRepository.postOrganizations(orgNames);
     const postRel = await this.relationshipRepository.postRelationships(relations);
 
     if (postOrg.success && postRel.success) {
