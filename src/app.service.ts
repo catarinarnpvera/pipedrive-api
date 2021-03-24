@@ -12,6 +12,7 @@ import { RelationshipRepository } from 'repositories/relationship.repository';
 
 @Injectable()
 export class AppService {
+  private pageLimit = 100;
   constructor(
     @InjectRepository(OrganizationRepository)
     private organizationRepository: OrganizationRepository,
@@ -24,9 +25,31 @@ export class AppService {
     await this.checkExistingOrg(name);
     const getResponse = await this.getRelationships(name);
 
-    return getResponse;
+    const paginatedList = this.getPaginatedList(getResponse, page.page);
+
+    return paginatedList;
   }
 
+  // eslint-disable-next-line prettier/prettier
+  async postOrganizationsAndRelationships(orgBody: PostDataRequestDto): Promise<postResponseDto> {
+
+    const relations = this.getRelations(orgBody.orgName, orgBody.children);
+    const orgNames = this.getOrgNames(relations);
+
+    const postOrg = await this.organizationRepository.postOrganizations(orgNames);
+    const postRel = await this.relationshipRepository.postRelationships(relations);
+
+    if (postOrg.success && postRel.success) {
+      return {
+        success: true,
+        recordsInsertedOnOrganization: postOrg.recordsInsertedOnOrganization,
+        recordsInsertedOnRelationship: postRel.recordsInsertedOnRelationship,
+      };
+    }
+  }
+
+  // HELPERS
+  // get
   async checkExistingOrg(name: string): Promise<OrganizationEntity> {
     const existingOrg = await this.organizationRepository.findByName(name);
     if (!existingOrg) {
@@ -62,25 +85,23 @@ export class AppService {
     return this.sortRelationNames(allRelations);
   }
 
-  // eslint-disable-next-line prettier/prettier
-  async postOrganizationsAndRelationships(orgBody: PostDataRequestDto): Promise<postResponseDto> {
-
-    const relations = this.getRelations(orgBody.orgName, orgBody.children);
-    const orgNames = this.getOrgNames(relations);
-
-    // eslint-disable-next-line prettier/prettier
-    const postOrg = await this.organizatpionRepository.postOrganizations(orgNames);
-    const postRel = await this.relationshipRepository.postRelationships(relations);
-
-    if (postOrg.success && postRel.success) {
-      return {
-        success: true,
-        recordsInsertedOnOrganization: postOrg.recordsInsertedOnOrganization,
-        recordsInsertedOnRelationship: postRel.recordsInsertedOnRelationship,
-      };
-    }
+  sortRelationNames(allRelations) {
+    return allRelations.sort((a, b) => (a.orgName > b.orgName ? 1 : -1));
   }
 
+  getPaginatedList(allRelations, page) {
+    const totalOfRelations = allRelations.length;
+    const begin = (page - 1) * this.pageLimit;
+    let end = begin + this.pageLimit;
+    end = end < totalOfRelations ? end : totalOfRelations;
+    const relations = [];
+    for (let index = begin; index < end; index++) {
+      relations.push(allRelations[index]);
+    }
+    return relations;
+  }
+
+  // post
   getRelations(orgName, children) {
     let orgRelations = [];
 
@@ -126,12 +147,9 @@ export class AppService {
       };
     });
   }
-
-  sortRelationNames(allRelations) {
-    return allRelations.sort((a, b) => (a.orgName > b.orgName ? 1 : -1));
-  }
 }
 
+// DATA SET
 // {
 //   "orgName":"Paradise Island",
 //   "children":[
