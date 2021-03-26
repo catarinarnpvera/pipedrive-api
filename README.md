@@ -37,12 +37,13 @@ There's a test class where I added one test "should insert organizations", that 
 
 ## Answer to 3rd question
 
-#A - Could this service perform well even with up to 100K relations per one organization?
+* A - Could this service perform well even with up to 100K relations per one organization?
+
 The service performance might run slower due to being built based on a recurring method
 
-#B - What would you change in architecture if 1M relations support is needed?
-To support that many relations a better structure would be needed, therefore establishing levels would be a way to achieve this. Also a implementation that doesn't use a recurring method.
-Finally to boost the performance I would clean the code a bit such as remove as many cycles as possible, for example on sort (sortRelationNames) and pagination (getPaginatedList).
+* B - What would you change in architecture if 1M relations support is needed?
+
+To support that many relations a better structure would be needed, therefore establishing levels would be a way to achieve this. Also a implementation that doesn't use a recurring method. Finally to boost the performance I would clean the code a bit such as remove as many cycles as possible, for example on sort (sortRelationNames) and pagination (getPaginatedList).
 
 ## Done by
 
