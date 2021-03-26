@@ -31,10 +31,10 @@ export class AppController {
   @ApiResponse({
     status: 200,
     description: 'Post organizations',
-    type: OrganizationResponseDto,
+    type: postResponseDto,
   })
   // eslint-disable-next-line prettier/prettier
-  postOrganizations(@Body() body: PostDataRequestDto): Promise<postResponseDto> {
+  postOrganizationsAndRelationships(@Body() body: PostDataRequestDto): Promise<postResponseDto> {
     return this.appService.postOrganizationsAndRelationships(body);
   }
 }

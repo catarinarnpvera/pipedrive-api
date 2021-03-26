@@ -19,6 +19,7 @@ export class AppService {
     @InjectRepository(RelationshipRepository)
     private relationshipRepository: RelationshipRepository,
   ) {}
+
   // eslint-disable-next-line prettier/prettier
   async getOrgRelationship(name: string, page: PageDto): Promise<OrgRelationshipResponseDto[]> {
 
@@ -105,7 +106,8 @@ export class AppService {
   getRelations(orgName, children) {
     let orgRelations = [];
 
-    children.forEach((child) => { // for
+    // for
+    children.forEach((child) => {
       orgRelations.push({
         parentName: orgName,
         childName: child.orgName,
@@ -122,7 +124,8 @@ export class AppService {
   getOrgNames(relations) {
     const orgNames = [];
 
-    relations.forEach((child) => { // for
+    // for
+    relations.forEach((child) => {
       // eslint-disable-next-line prettier/prettier
       if (!(orgNames.filter(org => org.orgName === child.childName).length > 0)) {
         orgNames.push({ orgName: child.childName });
@@ -154,7 +157,7 @@ export class AppService {
 //   "orgName":"Paradise Island",
 //   "children":[
 //      {
-//         "orgName:":"Banana tree",
+//         "orgName":"Banana tree",
 //         "children":[
 //            {
 //               "orgName":"Yellow Banana"
@@ -168,7 +171,7 @@ export class AppService {
 //         ]
 //      },
 //      {
-//         "orgName:":"Big banana tree",
+//         "orgName":"Big banana tree",
 //         "children":[
 //            {
 //               "orgName":"Yellow Banana"

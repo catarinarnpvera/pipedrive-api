@@ -4,7 +4,7 @@ export class childrenList {
   @ApiProperty()
   orgName: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   children: childrenList[];
 }
 
@@ -12,8 +12,6 @@ export class PostDataRequestDto {
   @ApiProperty()
   orgName: string;
 
-  @ApiProperty({ type: [childrenList] })
+  @ApiProperty({ type: [childrenList], required: false })
   children: childrenList[];
 }
-
-//{ type: [PostDataRequestDto] }
